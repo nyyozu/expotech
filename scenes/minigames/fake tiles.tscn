@@ -1,0 +1,965 @@
+[gd_scene format=3 uid="uid://bmqryyimjyp1s"]
+
+[ext_resource type="Script" uid="uid://o78mlb2ts5gj" path="res://scripts/minigame_3d.gd" id="1_vob75"]
+[ext_resource type="Script" uid="uid://dqyy61a5hwg1m" path="res://scripts/tiles.gd" id="2_x34jd"]
+[ext_resource type="Script" uid="uid://dn4fwwx47bjqc" path="res://scripts/death_area.gd" id="3_r7bjd"]
+[ext_resource type="Script" uid="uid://d1yfaqskqqg83" path="res://scripts/goal.gd" id="3_x34jd"]
+[ext_resource type="Script" uid="uid://brt5gdvvy6e6e" path="res://scripts/p_1.gd" id="4_jk6jl"]
+[ext_resource type="Texture2D" uid="uid://md4eywp43ovq" path="res://assets/Tiles/tile_piso_cozinha.svg" id="6_g6vbk"]
+[ext_resource type="Texture2D" uid="uid://di8kh5w5kcxwp" path="res://assets/P1/ChefP1_idle_v2.svg" id="6_r7bjd"]
+[ext_resource type="Script" uid="uid://bnfxinc45fay7" path="res://scripts/p_2.gd" id="6_yajek"]
+[ext_resource type="Texture2D" uid="uid://j4ntm80pww74" path="res://assets/P1/ChefP1_walk_v2.svg" id="7_jk6jl"]
+[ext_resource type="Texture2D" uid="uid://cmog7b4efegl2" path="res://assets/P2/ChefP2_idle_v2.svg" id="10_7ih2s"]
+[ext_resource type="Texture2D" uid="uid://c7gui1xc3w0ha" path="res://assets/P2/ChefP2_walk_v2.svg" id="11_yajek"]
+[ext_resource type="Texture2D" uid="uid://45pjtgxaykjc" path="res://assets/Tiles/parede_azulejos.svg" id="20_parede"]
+[ext_resource type="Texture2D" uid="uid://cq2hlb0l10mpd" path="res://assets/Tiles/faixa_chegada.svg" id="21_faixa"]
+[ext_resource type="Texture2D" uid="uid://biq1yd8f2p2gq" path="res://assets/Tiles/bandeira_quadriculada.svg" id="22_bandeira"]
+[ext_resource type="Texture2D" uid="uid://cr8dhkeqlhhlr" path="res://assets/Tiles/tampa_caldeirao.svg" id="23_tampa"]
+
+[sub_resource type="ProceduralSkyMaterial" id="ProceduralSkyMaterial_cozinha"]
+sky_top_color = Color(0.24313726, 0.3254902, 0.47843137, 1)
+sky_horizon_color = Color(0.7254902, 0.69411767, 0.6313726, 1)
+ground_bottom_color = Color(0.101961, 0.086275, 0.066667, 1)
+ground_horizon_color = Color(0.290196, 0.254902, 0.219608, 1)
+sun_angle_max = 40.0
+sun_curve = 0.1
+
+[sub_resource type="Sky" id="Sky_cozinha"]
+sky_material = SubResource("ProceduralSkyMaterial_cozinha")
+
+[sub_resource type="Environment" id="Environment_cozinha"]
+background_mode = 2
+sky = SubResource("Sky_cozinha")
+ambient_light_source = 2
+ambient_light_color = Color(0.7058824, 0.6666667, 0.6, 1)
+ambient_light_energy = 0.4
+tonemap_mode = 2
+tonemap_white = 1.1
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_piso_fundo"]
+albedo_color = Color(0.62, 0.6, 0.56, 1)
+albedo_texture = ExtResource("6_g6vbk")
+roughness = 0.95
+uv1_scale = Vector3(30, 17, 1)
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_piso_fundo"]
+size = Vector2(60, 34)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_parede"]
+cull_mode = 2
+albedo_color = Color(0.62, 0.6, 0.56, 1)
+albedo_texture = ExtResource("20_parede")
+roughness = 0.9
+uv1_scale = Vector3(16, 10, 1)
+texture_filter = 1
+
+[sub_resource type="BoxMesh" id="BoxMesh_parede_fundo"]
+size = Vector3(0.8, 11, 32)
+
+[sub_resource type="BoxMesh" id="BoxMesh_parede_lateral"]
+size = Vector3(54, 11, 0.8)
+
+[sub_resource type="GDScript" id="GDScript_b5qa1"]
+script/source = "extends Node3D
+
+func _ready() -> void:
+	sortear_tiles_falsos()
+
+func sortear_tiles_falsos() -> void:
+	for linha in get_children():
+		var tiles_da_linha: Array = linha.get_children()
+
+		for tile in tiles_da_linha:
+			tile.is_fake = false
+			tile.ja_quebrou = false
+			tile.colisao.disabled = false
+			tile.mesh.visible = true
+
+		var indice_sorteado = randi() % tiles_da_linha.size()
+		tiles_da_linha[indice_sorteado].is_fake = true
+
+		print(\"Fake na \", linha.name, \": \", tiles_da_linha[indice_sorteado].name)
+"
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_tl317"]
+size = Vector3(1.9462891, 0.9990003, 1.9594116)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_tampa"]
+albedo_texture = ExtResource("23_tampa")
+metallic = 0.1
+roughness = 0.62
+texture_filter = 1
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_tampa"]
+top_radius = 0.97
+bottom_radius = 0.97
+height = 0.16
+radial_segments = 16
+rings = 1
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_caldeirao"]
+albedo_color = Color(0.23921569, 0.22352941, 0.2, 1)
+metallic = 0.15
+roughness = 0.7
+
+[sub_resource type="CylinderMesh" id="CylinderMesh_corpo"]
+top_radius = 0.95
+bottom_radius = 0.8
+height = 0.85
+radial_segments = 16
+rings = 1
+
+[sub_resource type="BoxMesh" id="BoxMesh_alca"]
+size = Vector3(0.16, 0.42, 0.26)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_r6a7o"]
+size = Vector3(1.9804688, 0.8201904, 1.9420471)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_7rqru"]
+size = Vector3(1.9595337, 0.761734, 2.0993042)
+
+[sub_resource type="PhysicsMaterial" id="PhysicsMaterial_6x0ae"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_milbd"]
+size = Vector3(7.971222, 0.045532227, 7.9051666)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_0da2w"]
+albedo_texture = ExtResource("6_g6vbk")
+roughness = 0.92
+uv1_scale = Vector3(5, 5, 5)
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_milbd"]
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_8re0c"]
+size = Vector3(11.953766, 0.14263916, 11.831055)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_2hr5m"]
+albedo_texture = ExtResource("6_g6vbk")
+roughness = 0.92
+uv1_scale = Vector3(5, 5, 5)
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_tl317"]
+size = Vector2(12, 12)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_faixa"]
+albedo_texture = ExtResource("21_faixa")
+roughness = 0.85
+texture_filter = 1
+
+[sub_resource type="PlaneMesh" id="PlaneMesh_faixa"]
+size = Vector2(1.4, 5.9)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_mastro"]
+albedo_color = Color(0.5411765, 0.5647059, 0.6, 1)
+metallic = 0.25
+roughness = 0.4
+
+[sub_resource type="BoxMesh" id="BoxMesh_mastro"]
+size = Vector3(0.18, 4.2, 0.18)
+
+[sub_resource type="StandardMaterial3D" id="StandardMaterial3D_bandeira"]
+albedo_texture = ExtResource("22_bandeira")
+roughness = 0.9
+uv1_scale = Vector3(2.5, 1, 1)
+texture_filter = 1
+
+[sub_resource type="BoxMesh" id="BoxMesh_bandeira"]
+size = Vector3(0.09, 1.4, 5.9)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_6x0ae"]
+size = Vector3(1, 1, 5.8451233)
+
+[sub_resource type="BoxShape3D" id="BoxShape3D_smuj2"]
+size = Vector3(84.91788, 1.8200684, 30.630798)
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_r6a7o"]
+radius = 0.32958984
+height = 0.6591797
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_7ih2s"]
+atlas = ExtResource("6_r7bjd")
+region = Rect2(0, 0, 64, 80)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_yajek"]
+atlas = ExtResource("6_r7bjd")
+region = Rect2(64, 0, 64, 80)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_3rjtk"]
+atlas = ExtResource("7_jk6jl")
+region = Rect2(0, 0, 64, 80)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_g6vbk"]
+atlas = ExtResource("7_jk6jl")
+region = Rect2(64, 0, 64, 80)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_2hr5m"]
+atlas = ExtResource("7_jk6jl")
+region = Rect2(128, 0, 64, 80)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_0da2w"]
+atlas = ExtResource("7_jk6jl")
+region = Rect2(192, 0, 64, 80)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_7rqru"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_7ih2s")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_yajek")
+}],
+"loop": 1,
+"name": &"idle",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_3rjtk")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_g6vbk")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_2hr5m")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_0da2w")
+}],
+"loop": 1,
+"name": &"walk",
+"speed": 5.0
+}]
+
+[sub_resource type="CapsuleShape3D" id="CapsuleShape3D_b5qa1"]
+radius = 0.35876465
+height = 0.7175293
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_exuyy"]
+atlas = ExtResource("10_7ih2s")
+region = Rect2(0, 0, 64, 80)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_j4qht"]
+atlas = ExtResource("10_7ih2s")
+region = Rect2(64, 0, 64, 80)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_v3qto"]
+atlas = ExtResource("11_yajek")
+region = Rect2(0, 0, 64, 80)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_2s5u1"]
+atlas = ExtResource("11_yajek")
+region = Rect2(64, 0, 64, 80)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_aesvi"]
+atlas = ExtResource("11_yajek")
+region = Rect2(128, 0, 64, 80)
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_yymvj"]
+atlas = ExtResource("11_yajek")
+region = Rect2(192, 0, 64, 80)
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_8re0c"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_exuyy")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_j4qht")
+}],
+"loop": 1,
+"name": &"idle",
+"speed": 5.0
+}, {
+"frames": [{
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_v3qto")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_2s5u1")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_aesvi")
+}, {
+"duration": 1.0,
+"texture": SubResource("AtlasTexture_yymvj")
+}],
+"loop": 1,
+"name": &"walk",
+"speed": 5.0
+}]
+
+[sub_resource type="LabelSettings" id="LabelSettings_7ymno"]
+font_size = 40
+font_color = Color(0.9278343, 0, 0.28301933, 1)
+
+[node name="Minigame3D" type="Node3D" unique_id=340031181]
+script = ExtResource("1_vob75")
+
+[node name="WorldEnvironment" type="WorldEnvironment" parent="." unique_id=1294532136]
+environment = SubResource("Environment_cozinha")
+
+[node name="World" type="Node3D" parent="." unique_id=1124563553]
+transform = Transform3D(-4.371139e-08, 0, 1, 0, 1, 0, -1, 0, -4.371139e-08, 0, 0, 0)
+
+[node name="Salao" type="Node3D" parent="World" unique_id=1663784362]
+
+[node name="Piso_Recuado" type="MeshInstance3D" parent="World/Salao" unique_id=1796353891]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19, -3.2, 0)
+material_override = SubResource("StandardMaterial3D_piso_fundo")
+mesh = SubResource("PlaneMesh_piso_fundo")
+
+[node name="Parede_Fundo" type="MeshInstance3D" parent="World/Salao" unique_id=985319737]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 46, 5.5, 0)
+material_override = SubResource("StandardMaterial3D_parede")
+mesh = SubResource("BoxMesh_parede_fundo")
+
+[node name="Parede_Esquerda" type="MeshInstance3D" parent="World/Salao" unique_id=326795548]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19, 5.5, -12)
+material_override = SubResource("StandardMaterial3D_parede")
+mesh = SubResource("BoxMesh_parede_lateral")
+
+[node name="Parede_Direita" type="MeshInstance3D" parent="World/Salao" unique_id=982482004]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19, 5.5, 12)
+material_override = SubResource("StandardMaterial3D_parede")
+mesh = SubResource("BoxMesh_parede_lateral")
+
+[node name="Linhas" type="Node3D" parent="World" unique_id=758803343]
+script = SubResource("GDScript_b5qa1")
+
+[node name="Linha_1" type="Node3D" parent="World/Linhas" unique_id=383462364]
+
+[node name="Tile_01" type="StaticBody3D" parent="World/Linhas/Linha_1" unique_id=1859181633]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 0, 2)
+collision_layer = 3
+collision_mask = 3
+script = ExtResource("2_x34jd")
+metadata/_edit_group_ = true
+
+[node name="CollisionTile01" type="CollisionShape3D" parent="World/Linhas/Linha_1/Tile_01" unique_id=1038008382]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.021240234, -0.15805817, 0.019195318)
+shape = SubResource("BoxShape3D_tl317")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="World/Linhas/Linha_1/Tile_01" unique_id=1158873301]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.261442, 0)
+material_override = SubResource("StandardMaterial3D_tampa")
+mesh = SubResource("CylinderMesh_tampa")
+
+[node name="Corpo" type="MeshInstance3D" parent="World/Linhas/Linha_1/Tile_01/MeshInstance3D" unique_id=1929922055]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.565, 0)
+material_override = SubResource("StandardMaterial3D_caldeirao")
+mesh = SubResource("CylinderMesh_corpo")
+
+[node name="Alca_E" type="MeshInstance3D" parent="World/Linhas/Linha_1/Tile_01/MeshInstance3D" unique_id=570801943]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.95, -0.1, 0)
+material_override = SubResource("StandardMaterial3D_caldeirao")
+mesh = SubResource("BoxMesh_alca")
+
+[node name="Alca_D" type="MeshInstance3D" parent="World/Linhas/Linha_1/Tile_01/MeshInstance3D" unique_id=165963663]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.95, -0.1, 0)
+material_override = SubResource("StandardMaterial3D_caldeirao")
+mesh = SubResource("BoxMesh_alca")
+
+[node name="Detec" type="Area3D" parent="World/Linhas/Linha_1/Tile_01" unique_id=1313996823]
+collision_layer = 3
+collision_mask = 3
+
+[node name="DetecCollision" type="CollisionShape3D" parent="World/Linhas/Linha_1/Tile_01/Detec" unique_id=383879918]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.021240234, 0.02676773, 0.019195318)
+shape = SubResource("BoxShape3D_tl317")
+
+[node name="Tile_02" type="StaticBody3D" parent="World/Linhas/Linha_1" unique_id=1280803666]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 7, 0, -2)
+collision_layer = 3
+collision_mask = 3
+script = ExtResource("2_x34jd")
+metadata/_edit_group_ = true
+
+[node name="CollisionTile01" type="CollisionShape3D" parent="World/Linhas/Linha_1/Tile_02" unique_id=1580816966]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.021240234, -0.13121033, 0.019195557)
+shape = SubResource("BoxShape3D_tl317")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="World/Linhas/Linha_1/Tile_02" unique_id=1998353286]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.28829, 0)
+material_override = SubResource("StandardMaterial3D_tampa")
+mesh = SubResource("CylinderMesh_tampa")
+
+[node name="Corpo" type="MeshInstance3D" parent="World/Linhas/Linha_1/Tile_02/MeshInstance3D" unique_id=240189226]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.565, 0)
+material_override = SubResource("StandardMaterial3D_caldeirao")
+mesh = SubResource("CylinderMesh_corpo")
+
+[node name="Alca_E" type="MeshInstance3D" parent="World/Linhas/Linha_1/Tile_02/MeshInstance3D" unique_id=815768155]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.95, -0.1, 0)
+material_override = SubResource("StandardMaterial3D_caldeirao")
+mesh = SubResource("BoxMesh_alca")
+
+[node name="Alca_D" type="MeshInstance3D" parent="World/Linhas/Linha_1/Tile_02/MeshInstance3D" unique_id=512248009]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.95, -0.1, 0)
+material_override = SubResource("StandardMaterial3D_caldeirao")
+mesh = SubResource("BoxMesh_alca")
+
+[node name="Detec" type="Area3D" parent="World/Linhas/Linha_1/Tile_02" unique_id=463081330]
+
+[node name="DetecCollision" type="CollisionShape3D" parent="World/Linhas/Linha_1/Tile_02/Detec" unique_id=316789925]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.021240234, 0.0005207062, 0.019195557)
+shape = SubResource("BoxShape3D_tl317")
+
+[node name="Linha_2" type="Node3D" parent="World/Linhas" unique_id=668484460]
+
+[node name="Tile_02_1" type="StaticBody3D" parent="World/Linhas/Linha_2" unique_id=1634446233]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 0, 2)
+collision_layer = 3
+collision_mask = 3
+script = ExtResource("2_x34jd")
+metadata/_edit_group_ = true
+
+[node name="CollisionTile01" type="CollisionShape3D" parent="World/Linhas/Linha_2/Tile_02_1" unique_id=1063376994]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.021240234, -0.2422483, 0.019195557)
+shape = SubResource("BoxShape3D_tl317")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="World/Linhas/Linha_2/Tile_02_1" unique_id=1670010947]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.177252, 0)
+material_override = SubResource("StandardMaterial3D_tampa")
+mesh = SubResource("CylinderMesh_tampa")
+
+[node name="Corpo" type="MeshInstance3D" parent="World/Linhas/Linha_2/Tile_02_1/MeshInstance3D" unique_id=199851359]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.565, 0)
+material_override = SubResource("StandardMaterial3D_caldeirao")
+mesh = SubResource("CylinderMesh_corpo")
+
+[node name="Alca_E" type="MeshInstance3D" parent="World/Linhas/Linha_2/Tile_02_1/MeshInstance3D" unique_id=1889335081]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.95, -0.1, 0)
+material_override = SubResource("StandardMaterial3D_caldeirao")
+mesh = SubResource("BoxMesh_alca")
+
+[node name="Alca_D" type="MeshInstance3D" parent="World/Linhas/Linha_2/Tile_02_1/MeshInstance3D" unique_id=1388505231]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.95, -0.1, 0)
+material_override = SubResource("StandardMaterial3D_caldeirao")
+mesh = SubResource("BoxMesh_alca")
+
+[node name="Detec" type="Area3D" parent="World/Linhas/Linha_2/Tile_02_1" unique_id=777276026]
+collision_layer = 3
+collision_mask = 3
+
+[node name="DetecCollision" type="CollisionShape3D" parent="World/Linhas/Linha_2/Tile_02_1/Detec" unique_id=1516766695]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.024414063, -0.03277588, -0.013687134)
+shape = SubResource("BoxShape3D_r6a7o")
+
+[node name="Tile_02_2" type="StaticBody3D" parent="World/Linhas/Linha_2" unique_id=1972937412]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 11, 0, -2)
+collision_layer = 3
+collision_mask = 3
+script = ExtResource("2_x34jd")
+metadata/_edit_group_ = true
+
+[node name="CollisionTile01" type="CollisionShape3D" parent="World/Linhas/Linha_2/Tile_02_2" unique_id=898754037]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.021240234, -0.13386524, 0.019195557)
+shape = SubResource("BoxShape3D_tl317")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="World/Linhas/Linha_2/Tile_02_2" unique_id=684704928]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.285635, 0)
+material_override = SubResource("StandardMaterial3D_tampa")
+mesh = SubResource("CylinderMesh_tampa")
+
+[node name="Corpo" type="MeshInstance3D" parent="World/Linhas/Linha_2/Tile_02_2/MeshInstance3D" unique_id=216946786]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.565, 0)
+material_override = SubResource("StandardMaterial3D_caldeirao")
+mesh = SubResource("CylinderMesh_corpo")
+
+[node name="Alca_E" type="MeshInstance3D" parent="World/Linhas/Linha_2/Tile_02_2/MeshInstance3D" unique_id=1651973596]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.95, -0.1, 0)
+material_override = SubResource("StandardMaterial3D_caldeirao")
+mesh = SubResource("BoxMesh_alca")
+
+[node name="Alca_D" type="MeshInstance3D" parent="World/Linhas/Linha_2/Tile_02_2/MeshInstance3D" unique_id=357798714]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.95, -0.1, 0)
+material_override = SubResource("StandardMaterial3D_caldeirao")
+mesh = SubResource("BoxMesh_alca")
+
+[node name="Detec" type="Area3D" parent="World/Linhas/Linha_2/Tile_02_2" unique_id=251490598]
+collision_layer = 3
+collision_mask = 3
+
+[node name="DetecCollision" type="CollisionShape3D" parent="World/Linhas/Linha_2/Tile_02_2/Detec" unique_id=1164056631]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.014862061, 0.20954132, -0.067352295)
+shape = SubResource("BoxShape3D_7rqru")
+
+[node name="Linha_3" type="Node3D" parent="World/Linhas" unique_id=2109263671]
+
+[node name="Tile_03_1" type="StaticBody3D" parent="World/Linhas/Linha_3" unique_id=1504147534]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 0, 2)
+collision_layer = 3
+collision_mask = 3
+script = ExtResource("2_x34jd")
+metadata/_edit_group_ = true
+
+[node name="CollisionTile01" type="CollisionShape3D" parent="World/Linhas/Linha_3/Tile_03_1" unique_id=1573480546]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.021240234, -0.048301637, 0.019195557)
+shape = SubResource("BoxShape3D_tl317")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="World/Linhas/Linha_3/Tile_03_1" unique_id=1818043911]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.371199, 0)
+material_override = SubResource("StandardMaterial3D_tampa")
+mesh = SubResource("CylinderMesh_tampa")
+
+[node name="Corpo" type="MeshInstance3D" parent="World/Linhas/Linha_3/Tile_03_1/MeshInstance3D" unique_id=1215240282]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.565, 0)
+material_override = SubResource("StandardMaterial3D_caldeirao")
+mesh = SubResource("CylinderMesh_corpo")
+
+[node name="Alca_E" type="MeshInstance3D" parent="World/Linhas/Linha_3/Tile_03_1/MeshInstance3D" unique_id=1896711263]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.95, -0.1, 0)
+material_override = SubResource("StandardMaterial3D_caldeirao")
+mesh = SubResource("BoxMesh_alca")
+
+[node name="Alca_D" type="MeshInstance3D" parent="World/Linhas/Linha_3/Tile_03_1/MeshInstance3D" unique_id=1593056219]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.95, -0.1, 0)
+material_override = SubResource("StandardMaterial3D_caldeirao")
+mesh = SubResource("BoxMesh_alca")
+
+[node name="Detec" type="Area3D" parent="World/Linhas/Linha_3/Tile_03_1" unique_id=1115300852]
+
+[node name="DetecCollision" type="CollisionShape3D" parent="World/Linhas/Linha_3/Tile_03_1/Detec" unique_id=938483292]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.021240234, 0.06075953, 0.019195557)
+shape = SubResource("BoxShape3D_tl317")
+
+[node name="Tile_03_2" type="StaticBody3D" parent="World/Linhas/Linha_3" unique_id=1177278950]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 15, 0, -2)
+collision_layer = 3
+collision_mask = 3
+script = ExtResource("2_x34jd")
+metadata/_edit_group_ = true
+
+[node name="CollisionTile01" type="CollisionShape3D" parent="World/Linhas/Linha_3/Tile_03_2" unique_id=912638232]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.021240234, -0.064376354, 0.01919508)
+shape = SubResource("BoxShape3D_tl317")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="World/Linhas/Linha_3/Tile_03_2" unique_id=1690093875]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.355124, 0)
+material_override = SubResource("StandardMaterial3D_tampa")
+mesh = SubResource("CylinderMesh_tampa")
+
+[node name="Corpo" type="MeshInstance3D" parent="World/Linhas/Linha_3/Tile_03_2/MeshInstance3D" unique_id=1057019067]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.565, 0)
+material_override = SubResource("StandardMaterial3D_caldeirao")
+mesh = SubResource("CylinderMesh_corpo")
+
+[node name="Alca_E" type="MeshInstance3D" parent="World/Linhas/Linha_3/Tile_03_2/MeshInstance3D" unique_id=1511788560]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.95, -0.1, 0)
+material_override = SubResource("StandardMaterial3D_caldeirao")
+mesh = SubResource("BoxMesh_alca")
+
+[node name="Alca_D" type="MeshInstance3D" parent="World/Linhas/Linha_3/Tile_03_2/MeshInstance3D" unique_id=1295023559]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.95, -0.1, 0)
+material_override = SubResource("StandardMaterial3D_caldeirao")
+mesh = SubResource("BoxMesh_alca")
+
+[node name="Detec" type="Area3D" parent="World/Linhas/Linha_3/Tile_03_2" unique_id=2092518422]
+
+[node name="DetecCollision" type="CollisionShape3D" parent="World/Linhas/Linha_3/Tile_03_2/Detec" unique_id=658105518]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.021240234, 0.03731191, 0.019194722)
+shape = SubResource("BoxShape3D_tl317")
+
+[node name="Linha_4" type="Node3D" parent="World/Linhas" unique_id=1916949257]
+
+[node name="Tile_04_1" type="StaticBody3D" parent="World/Linhas/Linha_4" unique_id=1516208511]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19, 0, 2)
+collision_layer = 3
+collision_mask = 3
+script = ExtResource("2_x34jd")
+metadata/_edit_group_ = true
+
+[node name="CollisionTile01" type="CollisionShape3D" parent="World/Linhas/Linha_4/Tile_04_1" unique_id=892554434]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.021240234, -0.15805817, 0.019195318)
+shape = SubResource("BoxShape3D_tl317")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="World/Linhas/Linha_4/Tile_04_1" unique_id=867848431]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.261442, 0)
+material_override = SubResource("StandardMaterial3D_tampa")
+mesh = SubResource("CylinderMesh_tampa")
+
+[node name="Corpo" type="MeshInstance3D" parent="World/Linhas/Linha_4/Tile_04_1/MeshInstance3D" unique_id=1527883848]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.565, 0)
+material_override = SubResource("StandardMaterial3D_caldeirao")
+mesh = SubResource("CylinderMesh_corpo")
+
+[node name="Alca_E" type="MeshInstance3D" parent="World/Linhas/Linha_4/Tile_04_1/MeshInstance3D" unique_id=423324510]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.95, -0.1, 0)
+material_override = SubResource("StandardMaterial3D_caldeirao")
+mesh = SubResource("BoxMesh_alca")
+
+[node name="Alca_D" type="MeshInstance3D" parent="World/Linhas/Linha_4/Tile_04_1/MeshInstance3D" unique_id=1035645420]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.95, -0.1, 0)
+material_override = SubResource("StandardMaterial3D_caldeirao")
+mesh = SubResource("BoxMesh_alca")
+
+[node name="Detec" type="Area3D" parent="World/Linhas/Linha_4/Tile_04_1" unique_id=1071523805]
+collision_layer = 3
+collision_mask = 3
+
+[node name="DetecCollision" type="CollisionShape3D" parent="World/Linhas/Linha_4/Tile_04_1/Detec" unique_id=860909794]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.021240234, 0.02676773, 0.019195318)
+shape = SubResource("BoxShape3D_tl317")
+
+[node name="Tile_04_2" type="StaticBody3D" parent="World/Linhas/Linha_4" unique_id=2001999407]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 19, 0, -2)
+collision_layer = 3
+collision_mask = 3
+script = ExtResource("2_x34jd")
+metadata/_edit_group_ = true
+
+[node name="CollisionTile01" type="CollisionShape3D" parent="World/Linhas/Linha_4/Tile_04_2" unique_id=1777191875]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.021240234, -0.13121033, 0.019195557)
+shape = SubResource("BoxShape3D_tl317")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="World/Linhas/Linha_4/Tile_04_2" unique_id=1399259496]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.28829, 0)
+material_override = SubResource("StandardMaterial3D_tampa")
+mesh = SubResource("CylinderMesh_tampa")
+
+[node name="Corpo" type="MeshInstance3D" parent="World/Linhas/Linha_4/Tile_04_2/MeshInstance3D" unique_id=43851858]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.565, 0)
+material_override = SubResource("StandardMaterial3D_caldeirao")
+mesh = SubResource("CylinderMesh_corpo")
+
+[node name="Alca_E" type="MeshInstance3D" parent="World/Linhas/Linha_4/Tile_04_2/MeshInstance3D" unique_id=468121210]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.95, -0.1, 0)
+material_override = SubResource("StandardMaterial3D_caldeirao")
+mesh = SubResource("BoxMesh_alca")
+
+[node name="Alca_D" type="MeshInstance3D" parent="World/Linhas/Linha_4/Tile_04_2/MeshInstance3D" unique_id=1022052411]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.95, -0.1, 0)
+material_override = SubResource("StandardMaterial3D_caldeirao")
+mesh = SubResource("BoxMesh_alca")
+
+[node name="Detec" type="Area3D" parent="World/Linhas/Linha_4/Tile_04_2" unique_id=1331326248]
+
+[node name="DetecCollision" type="CollisionShape3D" parent="World/Linhas/Linha_4/Tile_04_2/Detec" unique_id=814025528]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.021240234, 0.0005207062, 0.019195557)
+shape = SubResource("BoxShape3D_tl317")
+
+[node name="Linha_5" type="Node3D" parent="World/Linhas" unique_id=1283412849]
+
+[node name="Tile_05_1" type="StaticBody3D" parent="World/Linhas/Linha_5" unique_id=899116041]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23, 0, 2)
+collision_layer = 3
+collision_mask = 3
+script = ExtResource("2_x34jd")
+metadata/_edit_group_ = true
+
+[node name="CollisionTile01" type="CollisionShape3D" parent="World/Linhas/Linha_5/Tile_05_1" unique_id=1079196356]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.021240234, -0.2422483, 0.019195557)
+shape = SubResource("BoxShape3D_tl317")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="World/Linhas/Linha_5/Tile_05_1" unique_id=1294271424]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.177252, 0)
+material_override = SubResource("StandardMaterial3D_tampa")
+mesh = SubResource("CylinderMesh_tampa")
+
+[node name="Corpo" type="MeshInstance3D" parent="World/Linhas/Linha_5/Tile_05_1/MeshInstance3D" unique_id=43363510]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.565, 0)
+material_override = SubResource("StandardMaterial3D_caldeirao")
+mesh = SubResource("CylinderMesh_corpo")
+
+[node name="Alca_E" type="MeshInstance3D" parent="World/Linhas/Linha_5/Tile_05_1/MeshInstance3D" unique_id=468644769]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.95, -0.1, 0)
+material_override = SubResource("StandardMaterial3D_caldeirao")
+mesh = SubResource("BoxMesh_alca")
+
+[node name="Alca_D" type="MeshInstance3D" parent="World/Linhas/Linha_5/Tile_05_1/MeshInstance3D" unique_id=1137068944]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.95, -0.1, 0)
+material_override = SubResource("StandardMaterial3D_caldeirao")
+mesh = SubResource("BoxMesh_alca")
+
+[node name="Detec" type="Area3D" parent="World/Linhas/Linha_5/Tile_05_1" unique_id=286952016]
+collision_layer = 3
+collision_mask = 3
+
+[node name="DetecCollision" type="CollisionShape3D" parent="World/Linhas/Linha_5/Tile_05_1/Detec" unique_id=744882217]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.024414063, -0.03277588, -0.013687134)
+shape = SubResource("BoxShape3D_r6a7o")
+
+[node name="Tile_05_2" type="StaticBody3D" parent="World/Linhas/Linha_5" unique_id=2139314627]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 23, 0, -2)
+collision_layer = 3
+collision_mask = 3
+script = ExtResource("2_x34jd")
+metadata/_edit_group_ = true
+
+[node name="CollisionTile01" type="CollisionShape3D" parent="World/Linhas/Linha_5/Tile_05_2" unique_id=507555921]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.021240234, -0.13386524, 0.019195557)
+shape = SubResource("BoxShape3D_tl317")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="World/Linhas/Linha_5/Tile_05_2" unique_id=1355804103]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.285635, 0)
+material_override = SubResource("StandardMaterial3D_tampa")
+mesh = SubResource("CylinderMesh_tampa")
+
+[node name="Corpo" type="MeshInstance3D" parent="World/Linhas/Linha_5/Tile_05_2/MeshInstance3D" unique_id=996407222]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.565, 0)
+material_override = SubResource("StandardMaterial3D_caldeirao")
+mesh = SubResource("CylinderMesh_corpo")
+
+[node name="Alca_E" type="MeshInstance3D" parent="World/Linhas/Linha_5/Tile_05_2/MeshInstance3D" unique_id=1257320134]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.95, -0.1, 0)
+material_override = SubResource("StandardMaterial3D_caldeirao")
+mesh = SubResource("BoxMesh_alca")
+
+[node name="Alca_D" type="MeshInstance3D" parent="World/Linhas/Linha_5/Tile_05_2/MeshInstance3D" unique_id=852836184]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.95, -0.1, 0)
+material_override = SubResource("StandardMaterial3D_caldeirao")
+mesh = SubResource("BoxMesh_alca")
+
+[node name="Detec" type="Area3D" parent="World/Linhas/Linha_5/Tile_05_2" unique_id=988986320]
+collision_layer = 3
+collision_mask = 3
+
+[node name="DetecCollision" type="CollisionShape3D" parent="World/Linhas/Linha_5/Tile_05_2/Detec" unique_id=503468444]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.014862061, 0.20954132, -0.067352295)
+shape = SubResource("BoxShape3D_7rqru")
+
+[node name="Linha_6" type="Node3D" parent="World/Linhas" unique_id=446730413]
+
+[node name="Tile_06_1" type="StaticBody3D" parent="World/Linhas/Linha_6" unique_id=1165869461]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 27, 0, 2)
+collision_layer = 3
+collision_mask = 3
+script = ExtResource("2_x34jd")
+metadata/_edit_group_ = true
+
+[node name="CollisionTile01" type="CollisionShape3D" parent="World/Linhas/Linha_6/Tile_06_1" unique_id=1233913766]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.021240234, -0.048301637, 0.019195557)
+shape = SubResource("BoxShape3D_tl317")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="World/Linhas/Linha_6/Tile_06_1" unique_id=1318359261]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.371199, 0)
+material_override = SubResource("StandardMaterial3D_tampa")
+mesh = SubResource("CylinderMesh_tampa")
+
+[node name="Corpo" type="MeshInstance3D" parent="World/Linhas/Linha_6/Tile_06_1/MeshInstance3D" unique_id=433237793]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.565, 0)
+material_override = SubResource("StandardMaterial3D_caldeirao")
+mesh = SubResource("CylinderMesh_corpo")
+
+[node name="Alca_E" type="MeshInstance3D" parent="World/Linhas/Linha_6/Tile_06_1/MeshInstance3D" unique_id=474402190]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.95, -0.1, 0)
+material_override = SubResource("StandardMaterial3D_caldeirao")
+mesh = SubResource("BoxMesh_alca")
+
+[node name="Alca_D" type="MeshInstance3D" parent="World/Linhas/Linha_6/Tile_06_1/MeshInstance3D" unique_id=453918300]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.95, -0.1, 0)
+material_override = SubResource("StandardMaterial3D_caldeirao")
+mesh = SubResource("BoxMesh_alca")
+
+[node name="Detec" type="Area3D" parent="World/Linhas/Linha_6/Tile_06_1" unique_id=971824619]
+
+[node name="DetecCollision" type="CollisionShape3D" parent="World/Linhas/Linha_6/Tile_06_1/Detec" unique_id=1693854996]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.021240234, 0.06075953, 0.019195557)
+shape = SubResource("BoxShape3D_tl317")
+
+[node name="Tile_06_2" type="StaticBody3D" parent="World/Linhas/Linha_6" unique_id=2107902738]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 27, 0, -2)
+collision_layer = 3
+collision_mask = 3
+script = ExtResource("2_x34jd")
+metadata/_edit_group_ = true
+
+[node name="CollisionTile01" type="CollisionShape3D" parent="World/Linhas/Linha_6/Tile_06_2" unique_id=1409951644]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.021240234, -0.064376354, 0.01919508)
+shape = SubResource("BoxShape3D_tl317")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="World/Linhas/Linha_6/Tile_06_2" unique_id=1228515862]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.355124, 0)
+material_override = SubResource("StandardMaterial3D_tampa")
+mesh = SubResource("CylinderMesh_tampa")
+
+[node name="Corpo" type="MeshInstance3D" parent="World/Linhas/Linha_6/Tile_06_2/MeshInstance3D" unique_id=2116598248]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -0.565, 0)
+material_override = SubResource("StandardMaterial3D_caldeirao")
+mesh = SubResource("CylinderMesh_corpo")
+
+[node name="Alca_E" type="MeshInstance3D" parent="World/Linhas/Linha_6/Tile_06_2/MeshInstance3D" unique_id=1169880698]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.95, -0.1, 0)
+material_override = SubResource("StandardMaterial3D_caldeirao")
+mesh = SubResource("BoxMesh_alca")
+
+[node name="Alca_D" type="MeshInstance3D" parent="World/Linhas/Linha_6/Tile_06_2/MeshInstance3D" unique_id=1741772519]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.95, -0.1, 0)
+material_override = SubResource("StandardMaterial3D_caldeirao")
+mesh = SubResource("BoxMesh_alca")
+
+[node name="Detec" type="Area3D" parent="World/Linhas/Linha_6/Tile_06_2" unique_id=2006768135]
+
+[node name="DetecCollision" type="CollisionShape3D" parent="World/Linhas/Linha_6/Tile_06_2/Detec" unique_id=1874706743]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.021240234, 0.03731191, 0.019194722)
+shape = SubResource("BoxShape3D_tl317")
+
+[node name="SpawnTile" type="StaticBody3D" parent="World" unique_id=485101590]
+physics_material_override = SubResource("PhysicsMaterial_6x0ae")
+
+[node name="CollisionTile" type="CollisionShape3D" parent="World/SpawnTile" unique_id=760483440]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.023513794, -0.0256958, -0.021690369)
+shape = SubResource("BoxShape3D_milbd")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="World/SpawnTile" unique_id=509543565]
+transform = Transform3D(4, 0, 0, 0, 4, 0, 0, 0, 4, 0, 0, 0)
+material_override = SubResource("StandardMaterial3D_0da2w")
+mesh = SubResource("PlaneMesh_milbd")
+
+[node name="WinningTile" type="StaticBody3D" parent="World" unique_id=1349976846]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 37, 0, 0)
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="World/WinningTile" unique_id=786151727]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, -0.010757446, -0.057525635, 0.07080073)
+shape = SubResource("BoxShape3D_8re0c")
+
+[node name="MeshInstance3D" type="MeshInstance3D" parent="World/WinningTile" unique_id=1825916824]
+material_override = SubResource("StandardMaterial3D_2hr5m")
+mesh = SubResource("PlaneMesh_tl317")
+
+[node name="Bandeira" type="Node3D" parent="World/WinningTile" unique_id=680930127]
+
+[node name="Faixa" type="MeshInstance3D" parent="World/WinningTile/Bandeira" unique_id=548704462]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.05, 0)
+material_override = SubResource("StandardMaterial3D_faixa")
+mesh = SubResource("PlaneMesh_faixa")
+
+[node name="Mastro_Esquerdo" type="MeshInstance3D" parent="World/WinningTile/Bandeira" unique_id=383475859]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.1, -2.92)
+material_override = SubResource("StandardMaterial3D_mastro")
+mesh = SubResource("BoxMesh_mastro")
+
+[node name="Mastro_Direito" type="MeshInstance3D" parent="World/WinningTile/Bandeira" unique_id=1334662493]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 2.1, 2.92)
+material_override = SubResource("StandardMaterial3D_mastro")
+mesh = SubResource("BoxMesh_mastro")
+
+[node name="Faixa_Quadriculada" type="MeshInstance3D" parent="World/WinningTile/Bandeira" unique_id=1668010405]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 3.1, 0)
+material_override = SubResource("StandardMaterial3D_bandeira")
+mesh = SubResource("BoxMesh_bandeira")
+
+[node name="Goal" type="Area3D" parent="World/WinningTile" unique_id=1449688328]
+script = ExtResource("3_x34jd")
+
+[node name="CollisionGoal" type="CollisionShape3D" parent="World/WinningTile/Goal" unique_id=572209212]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -0.00657659)
+shape = SubResource("BoxShape3D_6x0ae")
+
+[node name="DeathArea" type="Area3D" parent="World" unique_id=518195906]
+script = ExtResource("3_r7bjd")
+
+[node name="DeathCollision" type="CollisionShape3D" parent="World/DeathArea" unique_id=47112843]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 14.248398, -2.0489583, -1.6692811)
+shape = SubResource("BoxShape3D_smuj2")
+
+[node name="P1" type="CharacterBody3D" parent="World" unique_id=724395254]
+collision_layer = 3
+collision_mask = 3
+script = ExtResource("4_jk6jl")
+metadata/_edit_group_ = true
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="World/P1" unique_id=1938869146]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.141, 0.507, -1)
+shape = SubResource("CapsuleShape3D_r6a7o")
+
+[node name="AnimatedSprite3D" type="AnimatedSprite3D" parent="World/P1" unique_id=2122633360]
+transform = Transform3D(0.03330671, 0, -0.9994452, 0, 1, 0, 0.9994452, 0, 0.03330671, 0.029678581, 0.6101697, -0.9929615)
+sprite_frames = SubResource("SpriteFrames_7rqru")
+animation = &"walk"
+
+[node name="RemoteTransform3D" type="RemoteTransform3D" parent="World/P1" unique_id=1776204461]
+transform = Transform3D(1.1924881e-08, 0, -1, 0, 1, 0, 1, 0, 1.1924881e-08, -4, 2.9, -1)
+remote_path = NodePath("../../../Splitscreen/GridContainer/SVPC-P1/SVP-P1/CAM-P1")
+
+[node name="P2" type="CharacterBody3D" parent="World" unique_id=1853384290]
+collision_layer = 3
+collision_mask = 3
+script = ExtResource("6_yajek")
+metadata/_edit_group_ = true
+
+[node name="CollisionShape3D" type="CollisionShape3D" parent="World/P2" unique_id=1583166039]
+transform = Transform3D(1, 0, 0, 0, 1, 0, 0, 0, 1, 0.141, 0.507, 0.902)
+shape = SubResource("CapsuleShape3D_b5qa1")
+
+[node name="AnimatedSprite3D" type="AnimatedSprite3D" parent="World/P2" unique_id=949619078]
+transform = Transform3D(-0.07307488, 0, -0.99732643, 0, 1, 0, 0.99732643, 0, -0.07307488, 0.16303647, 0.59203553, 0.91837287)
+sprite_frames = SubResource("SpriteFrames_8re0c")
+animation = &"walk"
+
+[node name="RemoteTransform3D" type="RemoteTransform3D" parent="World/P2" unique_id=1024399961]
+transform = Transform3D(1.1924881e-08, 0, -1, 0, 1, 0, 1, 0, 1.1924881e-08, -4, 2.9, 1)
+remote_path = NodePath("../../../Splitscreen/GridContainer/SVPC-P2/SVP-P1/CAM-P2")
+
+[node name="Sun" type="DirectionalLight3D" parent="World" unique_id=790040036]
+transform = Transform3D(0.70710677, 0.49999997, -0.49999997, 0, 0.70710677, 0.70710677, 0.70710677, -0.49999997, 0.49999997, 0, 60, 30)
+layers = 7
+light_color = Color(1, 0.9647059, 0.8901961, 1)
+light_energy = 0.95
+shadow_enabled = true
+sky_mode = 1
+
+[node name="Win Canva" type="CanvasLayer" parent="World" unique_id=1474697546]
+
+[node name="Win Label" type="Label" parent="World/Win Canva" unique_id=1345265475]
+visible = false
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -133.0
+offset_top = -27.5
+offset_right = 133.0
+offset_bottom = 27.5
+grow_horizontal = 2
+grow_vertical = 2
+text = "FIM DO JOGO!"
+label_settings = SubResource("LabelSettings_7ymno")
+
+[node name="Splitscreen" type="CanvasLayer" parent="." unique_id=1455727690]
+
+[node name="GridContainer" type="GridContainer" parent="Splitscreen" unique_id=975706161]
+visibility_layer = 7
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+columns = 2
+
+[node name="SVPC-P1" type="SubViewportContainer" parent="Splitscreen/GridContainer" unique_id=1730712275]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+stretch = true
+metadata/_edit_group_ = true
+
+[node name="SVP-P1" type="SubViewport" parent="Splitscreen/GridContainer/SVPC-P1" unique_id=1553816294]
+handle_input_locally = false
+size = Vector2i(574, 648)
+render_target_update_mode = 4
+
+[node name="CAM-P1" type="Camera3D" parent="Splitscreen/GridContainer/SVPC-P1/SVP-P1" unique_id=1491795656]
+transform = Transform3D(1, 0, 5.563627e-08, 0, 1, 0, -5.563627e-08, 0, 1, -0.9999998, 2.9, 4)
+current = true
+
+[node name="SVPC-P2" type="SubViewportContainer" parent="Splitscreen/GridContainer" unique_id=1095493722]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+stretch = true
+metadata/_edit_group_ = true
+
+[node name="SVP-P1" type="SubViewport" parent="Splitscreen/GridContainer/SVPC-P2" unique_id=85676951]
+handle_input_locally = false
+size = Vector2i(574, 648)
+render_target_update_mode = 4
+
+[node name="CAM-P2" type="Camera3D" parent="Splitscreen/GridContainer/SVPC-P2/SVP-P1" unique_id=391035329]
+transform = Transform3D(1, 0, 5.563627e-08, 0, 1, 0, -5.563627e-08, 0, 1, 1.0000001, 2.9, 4)
+current = true
